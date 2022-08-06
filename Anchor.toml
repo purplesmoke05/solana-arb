@@ -1,0 +1,8 @@
+[features]
+seeds = false
+skip-lint = false
+[programs.localnet]
+arb = "JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo"
+arb-master = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
