@@ -117,33 +117,12 @@ pub struct MercurialExchangeExtend<'info> {
 }
 
 #[derive(Accounts)]
-pub struct SaberExchangeExtend<'info> {
-    swap_program: AccountInfo<'info>,
-    token_program: AccountInfo<'info>,
-    swap: AccountInfo<'info>,
-    swap_authority: AccountInfo<'info>,
-    user_authority: AccountInfo<'info>,
-    clock: AccountInfo<'info>,
-    #[account(mut)]
-    input_user_account: AccountInfo<'info>,
-    #[account(mut)]
-    input_token_account: AccountInfo<'info>,
-    #[account(mut)]
-    output_user_account: AccountInfo<'info>,
-    #[account(mut)]
-    output_token_account: AccountInfo<'info>,
-    #[account(mut)]
-    fees_token_account: AccountInfo<'info>,
-    pub cpi_program: Program<'info, arb::program::Jupiter>
-}
-
-#[derive(Accounts)]
 pub struct SaberSwapExtend<'info> {
     swap_program: AccountInfo<'info>,
     token_program: AccountInfo<'info>,
     swap: AccountInfo<'info>,
     swap_authority: AccountInfo<'info>,
-    user_authority: AccountInfo<'info>,
+    user_authority: Signer<'info>,
     #[account(mut)]
     input_user_account: AccountInfo<'info>,
     #[account(mut)]
@@ -390,7 +369,7 @@ pub mod arb_master {
             token_program: ctx.accounts.token_program.clone(),
             swap: ctx.accounts.swap.clone(),
             swap_authority: ctx.accounts.swap_authority.clone(),
-            user_authority: ctx.accounts.user_authority.clone(),
+            user_authority: ctx.accounts.user_authority.to_account_info(),
             input_user_account: ctx.accounts.input_user_account.clone(),
             input_token_account: ctx.accounts.input_token_account.clone(),
             output_user_account: ctx.accounts.output_user_account.clone(),
