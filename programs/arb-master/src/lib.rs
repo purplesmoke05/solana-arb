@@ -6,6 +6,78 @@ use anchor_spl::token::accessor::amount;
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[derive(Accounts)]
+pub struct RaydiumSwapExtend<'info> {
+    swap_program: AccountInfo<'info>,
+    token_program: AccountInfo<'info>,
+    #[account(mut)]
+    amm_id: AccountInfo<'info>,
+    amm_authority: AccountInfo<'info>,
+    #[account(mut)]
+    amm_open_orders: AccountInfo<'info>,
+    #[account(mut)]
+    amm_target_orders: AccountInfo<'info>,
+    #[account(mut)]
+    pool_coin_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    pool_pc_token_account: AccountInfo<'info>,
+    serum_program_id: AccountInfo<'info>,
+    #[account(mut)]
+    serum_market: AccountInfo<'info>,
+    #[account(mut)]
+    serum_bids: AccountInfo<'info>,
+    #[account(mut)]
+    serum_asks: AccountInfo<'info>,
+    #[account(mut)]
+    serum_event_queue: AccountInfo<'info>,
+    #[account(mut)]
+    serum_coin_vault_account: AccountInfo<'info>,
+    #[account(mut)]
+    serum_pc_vault_account: AccountInfo<'info>,
+    serum_vault_signer: AccountInfo<'info>,
+    #[account(mut)]
+    user_source_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    user_destination_token_account: AccountInfo<'info>,
+    user_source_owner: Signer<'info>,
+    pub cpi_program: Program<'info, arb::program::Jupiter>
+}
+
+#[derive(Accounts)]
+pub struct RaydiumSwapV2Extend<'info> {
+    swap_program: AccountInfo<'info>,
+    token_program: AccountInfo<'info>,
+    #[account(mut)]
+    amm_id: AccountInfo<'info>,
+    amm_authority: AccountInfo<'info>,
+    #[account(mut)]
+    amm_open_orders: AccountInfo<'info>,
+    #[account(mut)]
+    pool_coin_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    pool_pc_token_account: AccountInfo<'info>,
+    serum_program_id: AccountInfo<'info>,
+    #[account(mut)]
+    serum_market: AccountInfo<'info>,
+    #[account(mut)]
+    serum_bids: AccountInfo<'info>,
+    #[account(mut)]
+    serum_asks: AccountInfo<'info>,
+    #[account(mut)]
+    serum_event_queue: AccountInfo<'info>,
+    #[account(mut)]
+    serum_coin_vault_account: AccountInfo<'info>,
+    #[account(mut)]
+    serum_pc_vault_account: AccountInfo<'info>,
+    serum_vault_signer: AccountInfo<'info>,
+    #[account(mut)]
+    user_source_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    user_destination_token_account: AccountInfo<'info>,
+    user_source_owner: Signer<'info>,
+    pub cpi_program: Program<'info, arb::program::Jupiter>
+}
+
+#[derive(Accounts)]
 pub struct AldrinSwapExtend<'info> {
     swap_program: AccountInfo<'info>,
     pool: AccountInfo<'info>,
@@ -122,6 +194,7 @@ pub struct SaberSwapExtend<'info> {
     token_program: AccountInfo<'info>,
     swap: AccountInfo<'info>,
     swap_authority: AccountInfo<'info>,
+    #[account(mut)]
     user_authority: Signer<'info>,
     #[account(mut)]
     input_user_account: AccountInfo<'info>,
@@ -249,6 +322,65 @@ pub struct CropperTokenSwapExtend<'info> {
 #[program]
 pub mod arb_master {
     use super::*;
+
+    pub fn raydium_swap_cpi(ctx: Context<RaydiumSwapExtend>,in_amount:u64, use_chain_amount: bool, minimum_out_amount: u64) -> Result<()> {
+        let _in_amount = match use_chain_amount {
+            true=>amount(&ctx.accounts.user_source_token_account).unwrap(),
+            false=>in_amount
+        };
+        let cpi_accounts = arb::cpi::accounts::RaydiumSwap{
+            swap_program: ctx.accounts.swap_program.clone(),
+            token_program: ctx.accounts.token_program.clone(),
+            amm_id: ctx.accounts.amm_id.clone(),
+            amm_authority: ctx.accounts.amm_authority.clone(),
+            amm_open_orders: ctx.accounts.amm_open_orders.clone(),
+            amm_target_orders: ctx.accounts.amm_target_orders.clone(),
+            pool_coin_token_account: ctx.accounts.pool_coin_token_account.clone(),
+            pool_pc_token_account: ctx.accounts.pool_pc_token_account.clone(),
+            serum_program_id: ctx.accounts.serum_program_id.clone(),
+            serum_market: ctx.accounts.serum_market.clone(),
+            serum_bids: ctx.accounts.serum_bids.clone(),
+            serum_asks: ctx.accounts.serum_asks.clone(),
+            serum_event_queue: ctx.accounts.serum_event_queue.clone(),
+            serum_coin_vault_account: ctx.accounts.serum_coin_vault_account.clone(),
+            serum_pc_vault_account: ctx.accounts.serum_pc_vault_account.clone(),
+            serum_vault_signer: ctx.accounts.serum_vault_signer.clone(),
+            user_source_token_account: ctx.accounts.user_source_token_account.clone(),
+            user_destination_token_account: ctx.accounts.user_destination_token_account.clone(),
+            user_source_owner: ctx.accounts.user_source_owner.to_account_info()
+        };
+        let cpi_ctx = CpiContext::new(ctx.accounts.cpi_program.to_account_info(), cpi_accounts);
+        arb::cpi::raydium_swap(cpi_ctx, Some(_in_amount), minimum_out_amount, 0)
+    }
+
+    pub fn raydium_swap_v2_cpi(ctx: Context<RaydiumSwapV2Extend>,in_amount:u64, use_chain_amount: bool, minimum_out_amount: u64) -> Result<()> {
+        let _in_amount = match use_chain_amount {
+            true=>amount(&ctx.accounts.user_source_token_account).unwrap(),
+            false=>in_amount
+        };
+        let cpi_accounts = arb::cpi::accounts::RaydiumSwapV2{
+            swap_program: ctx.accounts.swap_program.clone(),
+            token_program: ctx.accounts.token_program.clone(),
+            amm_id: ctx.accounts.amm_id.clone(),
+            amm_authority: ctx.accounts.amm_authority.clone(),
+            amm_open_orders: ctx.accounts.amm_open_orders.clone(),
+            pool_coin_token_account: ctx.accounts.pool_coin_token_account.clone(),
+            pool_pc_token_account: ctx.accounts.pool_pc_token_account.clone(),
+            serum_program_id: ctx.accounts.serum_program_id.clone(),
+            serum_market: ctx.accounts.serum_market.clone(),
+            serum_bids: ctx.accounts.serum_bids.clone(),
+            serum_asks: ctx.accounts.serum_asks.clone(),
+            serum_event_queue: ctx.accounts.serum_event_queue.clone(),
+            serum_coin_vault_account: ctx.accounts.serum_coin_vault_account.clone(),
+            serum_pc_vault_account: ctx.accounts.serum_pc_vault_account.clone(),
+            serum_vault_signer: ctx.accounts.serum_vault_signer.clone(),
+            user_source_token_account: ctx.accounts.user_source_token_account.clone(),
+            user_destination_token_account: ctx.accounts.user_destination_token_account.clone(),
+            user_source_owner: ctx.accounts.user_source_owner.to_account_info()
+        };
+        let cpi_ctx = CpiContext::new(ctx.accounts.cpi_program.to_account_info(), cpi_accounts);
+        arb::cpi::raydium_swap_v2(cpi_ctx, Some(_in_amount), minimum_out_amount, 0)
+    }
 
     pub fn crema_token_swap_cpi(ctx: Context<CremaTokenSwapExtend>,in_amount:u64, use_chain_amount: bool, minimum_out_amount: u64) -> Result<()> {
         let _in_amount = match use_chain_amount {
